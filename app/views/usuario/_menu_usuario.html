@@ -1,3 +1,4 @@
+{% if request.session.get("usuario_id") %}
 <details class="account-menu">
     <summary class="user-chip">
         <span class="user-icon"><svg class="ui-icon" aria-hidden="true"><use href="/static/icons.svg#user"></use></svg></span>
@@ -22,3 +23,6 @@
         </form>
     </div>
 </details>
+{% else %}
+<a href="/" class="account-action">Iniciar sesión</a>
+{% endif %}

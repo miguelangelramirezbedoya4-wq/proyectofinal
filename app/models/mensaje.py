@@ -13,9 +13,11 @@ class Mensaje(Base):
     remitente_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     destinatario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     producto_id = Column(Integer, ForeignKey("productos.id"), nullable=False)
+    solicitud_intercambio_id = Column(Integer, ForeignKey("solicitudes_intercambio.id"), nullable=True)
     contenido = Column(Text, nullable=False)
     creado_en = Column(DateTime, nullable=False, default=datetime.utcnow)
 
     remitente = relationship("Usuario", foreign_keys=[remitente_id], back_populates="mensajes_enviados")
     destinatario = relationship("Usuario", foreign_keys=[destinatario_id], back_populates="mensajes_recibidos")
     producto = relationship("Producto", back_populates="mensajes")
+    solicitud_intercambio = relationship("SolicitudIntercambio")

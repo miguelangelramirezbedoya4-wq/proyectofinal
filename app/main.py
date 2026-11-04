@@ -1,4 +1,4 @@
-import os
+import logging
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -19,8 +19,12 @@ from app.controllers.usuario_controller import router as usuario_router
 from app.controllers.admin_controller import router as admin_router
 from app.controllers.categoria_controller import router as categoria_router
 from app.controllers.carrito_controller import router as carrito_router
+from app.security.passwords import migrate_legacy_passwords
+from app.security.session import session_settings
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+logger = logging.getLogger(__name__)
+SESSION_CONFIG = session_settings()
 
 Base.metadata.create_all(bind=engine)
 actualizar_esquema()
@@ -90,11 +94,16 @@ def sembrar_productos_demo() -> None:
 
 sembrar_productos_demo()
 
+with SessionLocal() as db:
+    cantidad_migrada = migrate_legacy_passwords(db)
+    if cantidad_migrada:
+        logger.info("Se protegieron las contraseñas de %s cuentas existentes.", cantidad_migrada)
+
 app = FastAPI(title="EcoInsumos - MVC")
 
 app.add_middleware(
     SessionMiddleware,
-    secret_key=os.getenv("SESSION_SECRET", "ecoinsumos-dev-secret"),
+    **SESSION_CONFIG,
 )
 
 app.mount(

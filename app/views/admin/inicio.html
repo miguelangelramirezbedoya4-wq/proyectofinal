@@ -1,120 +1,117 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0">
-
-    <title>EcoInsumos - Administracion</title>
-
-    <link
-        rel="stylesheet"
-        href="/static/css/general.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de administración - EcoInsumos</title>
+    <link rel="stylesheet" href="/static/css/general.css?v=ecoinsumos-design-2">
 </head>
-
 <body>
-
 <header class="topbar">
-
     <div class="container nav-container">
-
-        <a
-            href="/admin"
-            class="brand">
+        <a href="/admin" class="brand">
             <div class="brand-mark">EI</div>
             <span>Eco<span>Insumos</span></span>
         </a>
-
         <div class="auth-buttons">
             <button type="button" class="theme-toggle" data-theme-toggle aria-label="Activar modo noche" title="Activar modo noche" aria-pressed="false"><svg class="ui-icon" aria-hidden="true"><use href="/static/icons.svg#moon"></use></svg></button>
-            <a
-                href="/auth/logout"
-                class="stamp-btn">
-                Cerrar sesion
-            </a>
+            <a href="/auth/logout" class="stamp-btn">Cerrar sesión</a>
         </div>
-
     </div>
-
 </header>
 
-<main class="container">
-
-    <section class="hero">
-
-        <div class="hero-inner">
-
-            <span class="eyebrow">ADMIN</span>
-
-            <h1>
-                Bienvenido,
-                <span>{{ nombre }}</span>
-            </h1>
-
-            <p>
-                Gestion basica de usuarios registrados.
-            </p>
-
-        </div>
-
+<main class="container admin-dashboard">
+    <section class="admin-heading">
+        <span class="eyebrow">PANEL DE ADMINISTRACIÓN</span>
+        <h1>Bienvenido, {{ nombre }}</h1>
+        <p>Consulta los registros guardados en la base de datos de EcoInsumos.</p>
     </section>
 
+    <section class="admin-stats" aria-label="Resumen de registros">
+        <article class="card"><span>Usuarios registrados</span><strong>{{ usuarios|length }}</strong></article>
+        <article class="card"><span>Objetos publicados</span><strong>{{ productos|length }}</strong></article>
+        <article class="card"><span>Compras registradas</span><strong>{{ compras|length }}</strong></article>
+    </section>
 
-    <section class="catalog">
-
+    <section class="admin-section" id="usuarios">
         <div class="catalog-head">
-            <div>
-                <h2>Usuarios registrados</h2>
-                <p>
-                    Total: {{ usuarios|length }}
-                </p>
-            </div>
+            <div><h2>Usuarios registrados</h2><p>{{ usuarios|length }} cuentas</p></div>
         </div>
-
-        <div class="grid">
-
-            {% for usuario in usuarios %}
-
-                <article class="card">
-                    <span class="tag">
-                        {{ usuario.rol }}
-                    </span>
-
-                    <h3>{{ usuario.nombre }}</h3>
-
-                    <p class="desc">
-                        {{ usuario.email }}
-                    </p>
-
-                    <p>
-                        Estado:
-                        <strong>
-                            {{ "Activo" if usuario.activo else "Inactivo" }}
-                        </strong>
-                    </p>
-                </article>
-
-            {% else %}
-
-                <article class="card">
-                    <h3>Sin usuarios</h3>
-                    <p class="desc">
-                        Aun no hay usuarios registrados.
-                    </p>
-                </article>
-
-            {% endfor %}
-
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead><tr><th>ID</th><th>Nombre</th><th>Correo electrónico</th><th>Rol</th><th>Estado</th></tr></thead>
+                <tbody>
+                    {% for usuario in usuarios %}
+                    <tr>
+                        <td>{{ usuario.id }}</td>
+                        <td>{{ usuario.nombre }}</td>
+                        <td>{{ usuario.email }}</td>
+                        <td>{{ usuario.rol }}</td>
+                        <td>{{ "Activo" if usuario.activo else "Inactivo" }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="admin-empty">Aún no hay usuarios registrados.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-
     </section>
 
+    <section class="admin-section" id="productos">
+        <div class="catalog-head">
+            <div><h2>Objetos publicados</h2><p>{{ productos|length }} objetos</p></div>
+        </div>
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead><tr><th>ID</th><th>Objeto</th><th>Categoría</th><th>Publicador</th><th>Modalidad</th><th>Precio</th><th>Disponibilidad</th></tr></thead>
+                <tbody>
+                    {% for producto in productos %}
+                    <tr>
+                        <td>{{ producto.id }}</td>
+                        <td>{{ producto.nombre }}</td>
+                        <td>{{ producto.categoria.nombre if producto.categoria else "Sin categoría" }}</td>
+                        <td>{{ producto.vendedor.nombre if producto.vendedor else "No disponible" }}</td>
+                        <td>{{ "Intercambio" if producto.es_intercambio else "Venta" }}</td>
+                        <td>{{ "—" if producto.es_intercambio else "$ " ~ producto.precio }}</td>
+                        <td>{{ "Disponible" if producto.disponible else "Vendido" }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="admin-empty">Aún no hay objetos publicados.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="admin-section" id="compras">
+        <div class="catalog-head">
+            <div><h2>Compras registradas</h2><p>{{ compras|length }} operaciones</p></div>
+        </div>
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead><tr><th>ID</th><th>Fecha</th><th>Objeto</th><th>Comprador</th><th>Vendedor</th><th>Cantidad</th><th>Total</th><th>Estado</th><th>Referencia</th></tr></thead>
+                <tbody>
+                    {% for compra in compras %}
+                    <tr>
+                        <td>{{ compra.id }}</td>
+                        <td>{{ compra.creada_en.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>{{ compra.producto.nombre if compra.producto else "No disponible" }}</td>
+                        <td>{{ compra.comprador.nombre if compra.comprador else "No disponible" }}</td>
+                        <td>{{ compra.producto.vendedor.nombre if compra.producto and compra.producto.vendedor else "No disponible" }}</td>
+                        <td>{{ compra.cantidad }}</td>
+                        <td>$ {{ compra.total }}</td>
+                        <td>{{ compra.estado.replace('_', ' ')|title }}</td>
+                        <td>{{ compra.referencia_pago or "Sin referencia" }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="9" class="admin-empty">Aún no hay compras registradas.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
 </main>
 
 <script src="/static/js/theme.js"></script>
-
 </body>
-
 </html>

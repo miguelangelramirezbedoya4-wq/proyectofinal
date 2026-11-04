@@ -1,13 +1,17 @@
+import logging
 from pathlib import Path
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
 from app.models.categoria import Categoria
+from app.models.carrito import Carrito
+from app.models.compra import Compra
 from app.models.mensaje import Mensaje
 from app.models.intercambio import SolicitudIntercambio
 from app.models.productos import Producto
@@ -19,6 +23,7 @@ router = APIRouter(
 )
 
 templates = Jinja2Templates(directory="app/views")
+logger = logging.getLogger(__name__)
 
 
 def _usuario_autenticado(request: Request) -> bool:
@@ -41,6 +46,16 @@ def _contexto_usuario(request: Request, **extra):
     return contexto
 
 
+def _filtrar_productos_para_compra(producto: Producto, usuario_id: int | None) -> bool:
+    if usuario_id is None:
+        return True
+    if producto is None:
+        return False
+    if producto.vendedor_id is None:
+        return True
+    return producto.vendedor_id != usuario_id
+
+
 @router.get("")
 def inicio_usuario(request: Request):
     respuesta = _redirigir_si_no_hay_sesion(request)
@@ -61,19 +76,88 @@ def inicio_usuario_alias(request: Request):
 
 
 @router.get("/objetos")
-def listar_objetos(request: Request, db: Session = Depends(get_db)):
+def listar_objetos(
+    request: Request,
+    mis_publicaciones: bool = False,
+    db: Session = Depends(get_db),
+):
     respuesta = _redirigir_si_no_hay_sesion(request)
 
     if respuesta:
         return respuesta
+
+    usuario_id = request.session.get("usuario_id")
+    query = db.query(Producto)
+    if mis_publicaciones:
+        query = query.filter(Producto.vendedor_id == usuario_id)
+    else:
+        query = query.filter(Producto.disponible.is_(True))
+        query = query.filter(or_(Producto.vendedor_id.is_(None), Producto.vendedor_id != usuario_id))
 
     return templates.TemplateResponse(
         request=request,
         name="usuario/objetos.html",
         context=_contexto_usuario(
             request,
-            objetos=db.query(Producto).filter(Producto.disponible.is_(True)).order_by(Producto.id.desc()).all(),
+            objetos=query.order_by(Producto.id.desc()).all(),
+            vista_propia=mis_publicaciones,
+            resultado=request.query_params.get("resultado"),
         ),
+    )
+
+
+@router.post("/objetos/{producto_id}/eliminar")
+def eliminar_objeto(producto_id: int, request: Request, db: Session = Depends(get_db)):
+    respuesta = _redirigir_si_no_hay_sesion(request)
+    if respuesta:
+        return respuesta
+
+    producto = db.get(Producto, producto_id)
+    usuario_id = request.session["usuario_id"]
+    if not producto or producto.vendedor_id != usuario_id:
+        raise HTTPException(status_code=404, detail="No se encontró el objeto publicado por tu cuenta.")
+
+    if db.query(Compra).filter(Compra.producto_id == producto.id).first():
+        return RedirectResponse(
+            url="/usuario/objetos?mis_publicaciones=true&resultado=vendido",
+            status_code=303,
+        )
+
+    tiene_propuestas = db.query(SolicitudIntercambio).filter(
+        or_(
+            SolicitudIntercambio.producto_solicitado_id == producto.id,
+            SolicitudIntercambio.producto_ofrecido_id == producto.id,
+        )
+    ).first()
+    tiene_mensajes = db.query(Mensaje).filter(Mensaje.producto_id == producto.id).first()
+    if tiene_propuestas or tiene_mensajes:
+        return RedirectResponse(
+            url="/usuario/objetos?mis_publicaciones=true&resultado=historial",
+            status_code=303,
+        )
+
+    nombre_imagen = producto.imagen
+    imagen_compartida = (
+        db.query(Producto)
+        .filter(Producto.imagen == nombre_imagen, Producto.id != producto.id)
+        .first()
+        if nombre_imagen
+        else None
+    )
+    db.query(Carrito).filter(Carrito.producto_id == producto.id).delete()
+    db.delete(producto)
+    db.commit()
+
+    if nombre_imagen and not imagen_compartida and Path(nombre_imagen).name == nombre_imagen:
+        ruta_imagen = Path(__file__).resolve().parents[1] / "static" / "uploads" / nombre_imagen
+        try:
+            ruta_imagen.unlink(missing_ok=True)
+        except OSError:
+            logger.exception("No se pudo borrar el archivo de imagen del producto %s", producto_id)
+
+    return RedirectResponse(
+        url="/usuario/objetos?mis_publicaciones=true&resultado=eliminado",
+        status_code=303,
     )
 
 
@@ -98,6 +182,8 @@ async def publicar_objeto(
     descripcion: str = Form(...),
     precio: int | None = Form(None),
     modalidad: str = Form("venta"),
+    categorias_intercambio: list[str] | None = Form(None),
+    intercambio_por: str = Form(""),
     categoria_id: int = Form(...),
     imagen: UploadFile | None = File(None),
     db: Session = Depends(get_db),
@@ -131,6 +217,21 @@ async def publicar_objeto(
             status_code=400,
         )
 
+    preferencias_intercambio = None
+    if es_intercambio:
+        opciones_validas = {
+            "Escolar", "Oficina", "Libros", "Tecnología", "Arte y manualidades",
+            "Hogar", "Acepto propuestas variadas",
+        }
+        preferencias = [
+            opcion for opcion in (categorias_intercambio or [])
+            if opcion in opciones_validas
+        ]
+        detalle_intercambio = intercambio_por.strip()[:500]
+        if detalle_intercambio:
+            preferencias.append(detalle_intercambio)
+        preferencias_intercambio = ", ".join(dict.fromkeys(preferencias)) or "Acepto propuestas variadas"
+
     nombre_archivo = None
     if imagen and imagen.filename:
         extension = Path(imagen.filename).suffix.lower()
@@ -147,7 +248,8 @@ async def publicar_objeto(
 
     producto = Producto(
         nombre=nombre, descripcion=descripcion, precio=0 if es_intercambio else precio,
-        es_intercambio=es_intercambio, categoria_id=categoria.id,
+        es_intercambio=es_intercambio, intercambio_por=preferencias_intercambio,
+        categoria_id=categoria.id,
         vendedor_id=request.session["usuario_id"], imagen=nombre_archivo, disponible=True,
     )
     db.add(producto)
@@ -216,9 +318,21 @@ def crear_propuesta_intercambio(
         SolicitudIntercambio.estado == "pendiente",
     ).first()
     if not repetida:
-        db.add(SolicitudIntercambio(
+        solicitud = SolicitudIntercambio(
             solicitante_id=solicitante_id, producto_solicitado_id=solicitado.id,
             producto_ofrecido_id=ofrecido.id, mensaje=mensaje.strip() or None,
+        )
+        db.add(solicitud)
+        db.flush()
+        contenido = f"Te propusieron intercambiar {ofrecido.nombre} por {solicitado.nombre}."
+        if solicitud.mensaje:
+            contenido += f" Mensaje: {solicitud.mensaje}"
+        db.add(Mensaje(
+            remitente_id=solicitante_id,
+            destinatario_id=solicitado.vendedor_id,
+            producto_id=solicitado.id,
+            solicitud_intercambio_id=solicitud.id,
+            contenido=contenido,
         ))
         db.commit()
     return RedirectResponse(url="/usuario/intercambios", status_code=303)
@@ -251,7 +365,11 @@ def responder_intercambio(solicitud_id: int, accion: str, request: Request, db: 
     if solicitud.estado != "pendiente" or accion not in {"aceptar", "rechazar"}:
         raise HTTPException(status_code=400, detail="Esta solicitud ya fue gestionada.")
     if accion == "aceptar":
-        if not solicitud.producto_solicitado.disponible or not solicitud.producto_ofrecido.disponible:
+        if (
+            not solicitud.producto_solicitado.disponible
+            or not solicitud.producto_ofrecido.disponible
+            or solicitud.producto_ofrecido.vendedor_id != solicitud.solicitante_id
+        ):
             raise HTTPException(status_code=400, detail="Uno de los objetos ya no está disponible.")
         solicitud.producto_solicitado.disponible = False
         solicitud.producto_ofrecido.disponible = False
@@ -314,5 +432,6 @@ def listar_mensajes(request: Request, db: Session = Depends(get_db)):
                 (Mensaje.remitente_id == request.session["usuario_id"]) |
                 (Mensaje.destinatario_id == request.session["usuario_id"])
             ).order_by(Mensaje.creado_en.desc()).all(),
+            usuario_id=request.session["usuario_id"],
         ),
     )

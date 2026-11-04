@@ -11,10 +11,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@600;700;800;900&family=Space+Grotesk:wght@600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="/static/css/general.css">
+    <link rel="stylesheet" href="/static/css/general.css?v=ecoinsumos-design-2">
 </head>
 
 <body>
@@ -80,21 +80,12 @@
          HERO
     ====================================================== -->
 
-    <section class="hero">
-
-        <div class="hero-holes" aria-hidden="true">
-            <span class="hole"></span>
-            <span class="hole"></span>
-            <span class="hole"></span>
-            <span class="hole"></span>
-            <span class="hole"></span>
-        </div>
-
-        <div class="container hero-inner">
-
-            <span class="eyebrow">
-                — EcoInsumos
-            </span>
+    <section class="hero guest-hero">
+        <div class="hero-inner">
+            <div class="hero-brandline">
+                <span class="hero-brand-mark" aria-hidden="true">EI</span>
+                <span>ECOINSUMOS</span>
+            </div>
 
             <h1>
                 Dale una segunda vida
@@ -102,8 +93,7 @@
             </h1>
 
             <p>
-                Publica objetos usados, encuentra lo que necesitas
-                y contacta directamente con otros usuarios.
+                Publica objetos usados, encuentra lo que necesitas y contacta directamente con otros usuarios.
             </p>
 
             <div class="hero-cta">
@@ -124,7 +114,10 @@
             </div>
 
         </div>
-
+        <div class="hero-visual guest-hero-visual">
+            <img src="/static/uploads/hero-reutilizacion-ia.png" alt="Dos personas intercambian una caja con útiles y objetos para reutilizar">
+            <span class="hero-visual-index" aria-hidden="true">01 <i></i> REUTILIZA</span>
+        </div>
     </section>
 
 
@@ -238,9 +231,12 @@
 
         <div class="catalog-head">
 
-            <h2>
-                Objetos disponibles
-            </h2>
+            <div class="catalog-title-group">
+                <span class="section-kicker">SEGUNDA VIDA, BUENAS IDEAS</span>
+                <h2>
+                    Objetos disponibles
+                </h2>
+            </div>
 
             <span
                 class="count"
@@ -595,6 +591,7 @@
                     name="password"
                     type="password"
                     placeholder="Mínimo 8 caracteres"
+                    minlength="8"
                     required>
 
                 <label for="regWhatsapp">

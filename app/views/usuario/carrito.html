@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Carrito - EcoInsumos</title><link rel="stylesheet" href="/static/css/general.css"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Carrito - EcoInsumos</title><link rel="stylesheet" href="/static/css/general.css?v=ecoinsumos-design-2"></head>
 <body>
 <header class="topbar"><div class="container nav-container"><a href="/usuario" class="brand"><div class="brand-mark">EI</div><span>Eco<span>Insumos</span></span></a><button class="hamburger" aria-label="Abrir menú" aria-expanded="false"><span></span></button><div class="topbar-nav"><nav class="nav-links"><a href="/usuario">Inicio</a><a href="/usuario/objetos">Objetos disponibles</a><a href="/categorias/">Categorías</a><a href="/carrito/" class="active">Carrito <span class="cart-count" aria-label="{{ cantidad_carrito }} artículos en el carrito">{{ cantidad_carrito }}</span></a><a href="/usuario/publicar">Publicar objeto</a><a href="/usuario/mensajes">Mensajes</a><a href="/carrito/ventas">Mis ventas</a></nav><div class="auth-buttons">{% include "usuario/_tema.html" %}{% include "usuario/_menu_usuario.html" %}</div></div></div></header>
 
@@ -9,14 +9,18 @@
     <div class="grid">
         {% for item in items %}
         <article class="card cart-item">
+            {% if item.producto and item.producto.imagen %}
+            <img class="cart-product-image" src="/static/uploads/{{ item.producto.imagen }}" alt="{{ item.producto.nombre }}">
+            {% else %}
             <div class="card-img-placeholder"><svg class="ui-icon" aria-hidden="true"><use href="/static/icons.svg#box"></use></svg></div>
+            {% endif %}
             <span class="tag">Cantidad: {{ item.cantidad }}</span>
             <h3>{{ item.producto.nombre if item.producto else "Producto" }}</h3>
             <p class="desc">Objeto listo para una nueva oportunidad.</p>
-            <div class="row"><span class="price">$ {{ item.producto.precio if item.producto else 0 }}</span><a href="/usuario/objetos/{{ item.producto_id }}" class="btn-outline">Ver</a><button type="button" class="btn-solid buy-button" data-producto-id="{{ item.producto_id }}" data-producto-nombre="{{ item.producto.nombre if item.producto else 'Producto' }}" data-producto-precio="{{ item.producto.precio if item.producto else 0 }}">Comprar</button><button type="button" class="btn-outline remove-cart" data-producto-id="{{ item.producto_id }}">Quitar</button></div>
+            <div class="row"><span class="price">$ {{ item.producto.precio if item.producto else 0 }}</span>{% if item.producto %}<a href="/usuario/objetos/{{ item.producto_id }}" class="btn-outline">Ver</a>{% endif %}{% if item.producto and item.producto.disponible %}<button type="button" class="btn-solid buy-button" data-producto-id="{{ item.producto_id }}" data-producto-nombre="{{ item.producto.nombre }}" data-producto-precio="{{ item.producto.precio }}">Comprar</button>{% else %}<span class="tag movement-buy">Ya no disponible</span>{% endif %}<button type="button" class="btn-outline remove-cart" data-producto-id="{{ item.producto_id }}">Quitar</button></div>
         </article>
         {% else %}
-        <article class="card"><div class="card-img-placeholder"><svg class="ui-icon" aria-hidden="true"><use href="/static/icons.svg#cart"></use></svg></div><h3>Tu carrito está vacío</h3><p class="desc">Agrega objetos para continuar.</p></article>
+        <article class="card"><div class="card-img-placeholder"><svg class="ui-icon" aria-hidden="true"><use href="/static/icons.svg#cart"></use></svg></div><h3>Tu carrito está vacío</h3><p class="desc">Agrega objetos para continuar.</p><a href="/usuario/objetos" class="btn-solid">Explorar objetos</a></article>
         {% endfor %}
     </div>
     <p id="purchaseMessage" class="modal-message hidden"></p>
@@ -25,14 +29,33 @@
 <div id="checkoutOverlay" class="checkout-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle">
     <section class="checkout-modal">
         <button type="button" class="checkout-close" aria-label="Cerrar simulación">×</button>
-        <div class="checkout-heading"><span class="checkout-icon"><svg class="ui-icon" aria-hidden="true"><use href="/static/icons.svg#credit-card"></use></svg></span><div><span class="section-kicker">PAGO SIMULADO</span><h2 id="checkoutTitle">Datos para tu pedido</h2></div></div>
-        <p class="checkout-disclaimer">No se realiza ningún cobro ni se guardan tus datos bancarios.</p>
-        <div class="checkout-summary"><span id="checkoutProduct">Producto</span><strong id="checkoutPrice">$ 0</strong></div>
-        <form id="checkoutForm" novalidate>
-            <div class="checkout-fields"><label>Nombre completo<input name="nombre" autocomplete="name" required placeholder="Tu nombre"></label><label>Teléfono<input name="telefono" inputmode="tel" required placeholder="Ej: 300 123 4567"></label><label class="field-wide">Dirección de entrega<input name="direccion" autocomplete="street-address" required placeholder="Ej: Calle 10 # 25-30, apartamento 201"></label><label>Ciudad<input name="ciudad" autocomplete="address-level2" required placeholder="Ej: Bogotá"></label><label>Forma de pago<select name="metodo" required><option value="">Selecciona una opción</option><option>Cuenta bancaria simulada</option><option>Tarjeta simulada</option><option>Pago contraentrega simulado</option></select></label><label class="field-wide">Número de cuenta o tarjeta <small>(simulado)</small><input name="cuenta" inputmode="numeric" required minlength="6" placeholder="Ingresa solo datos ficticios"></label></div>
+        <div class="checkout-heading"><span class="checkout-icon"><svg class="ui-icon" aria-hidden="true"><use href="/static/icons.svg#credit-card"></use></svg></span><div><span class="section-kicker">SIMULADOR DIGITAL</span><h2 id="checkoutTitle">Confirma tu compra</h2></div></div>
+        <p class="checkout-disclaimer">Elige un método de prueba. No se realizan cobros ni se solicitan o guardan datos bancarios.</p>
+        <div class="checkout-summary">
+            <div><span>Producto</span><strong id="checkoutProduct">Producto</strong></div>
+            <div><span>Cantidad</span><strong id="checkoutQuantity">1</strong></div>
+            <div><span>Precio unitario</span><strong id="checkoutUnitPrice">$ 0</strong></div>
+            <div class="checkout-total"><span>Total</span><strong id="checkoutPrice">$ 0</strong></div>
+        </div>
+        <form id="checkoutForm">
+            <div class="checkout-fields"><label class="field-wide" for="paymentMethod">Método de pago<select id="paymentMethod" name="metodo_pago" required><option value="tarjeta_prueba">Tarjeta de prueba</option><option value="transferencia_simulada">Transferencia simulada</option></select></label></div>
             <p id="checkoutStatus" class="checkout-status" aria-live="polite"></p>
-            <button type="submit" id="checkoutConfirm" class="btn-solid checkout-confirm">Confirmar compra simulada</button>
+            <div class="row"><button type="button" class="btn-outline checkout-close-action">Seguir revisando</button><button type="submit" id="checkoutConfirm" class="btn-solid checkout-confirm">Simular pago</button></div>
         </form>
+        <section id="checkoutReceipt" class="checkout-receipt hidden" aria-live="polite">
+            <span class="section-kicker">COMPRA REGISTRADA</span>
+            <h3>Comprobante de operación</h3>
+            <dl>
+                <div><dt>Producto</dt><dd id="receiptProduct"></dd></div>
+                <div><dt>Cantidad</dt><dd id="receiptQuantity"></dd></div>
+                <div><dt>Precio unitario</dt><dd id="receiptUnitPrice"></dd></div>
+                <div class="receipt-total"><dt>Total</dt><dd id="receiptTotal"></dd></div>
+                <div><dt>Método de pago</dt><dd id="receiptMethod"></dd></div>
+                <div><dt>Estado</dt><dd id="receiptState"></dd></div>
+                <div><dt>Referencia</dt><dd id="receiptReference"></dd></div>
+            </dl>
+            <button type="button" class="btn-solid receipt-done">Volver al carrito</button>
+        </section>
     </section>
 </div>
 
@@ -44,31 +67,61 @@
     const form = document.getElementById('checkoutForm');
     const confirm = document.getElementById('checkoutConfirm');
     const status = document.getElementById('checkoutStatus');
+    const receipt = document.getElementById('checkoutReceipt');
+    const paymentMethod = document.getElementById('paymentMethod');
     let productId = null;
-    const close = () => overlay.classList.add('hidden');
-    document.querySelector('.checkout-close').addEventListener('click', close);
+    let purchaseCompleted = false;
+    const formatPrice = (value) => '$ ' + new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(Number(value) || 0);
+    const close = () => {
+        overlay.classList.add('hidden');
+        if (purchaseCompleted) window.location.reload();
+    };
+    document.querySelectorAll('.checkout-close, .checkout-close-action').forEach((button) => button.addEventListener('click', close));
+    document.querySelector('.receipt-done').addEventListener('click', close);
     overlay.addEventListener('click', (event) => { if (event.target === overlay) close(); });
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape') close(); });
     document.querySelectorAll('.buy-button').forEach((button) => button.addEventListener('click', () => {
         productId = button.dataset.productoId;
         document.getElementById('checkoutProduct').textContent = button.dataset.productoNombre;
-        document.getElementById('checkoutPrice').textContent = '$ ' + button.dataset.productoPrecio;
-        form.reset(); status.textContent = ''; status.className = 'checkout-status'; confirm.disabled = false; confirm.textContent = 'Confirmar compra simulada';
+        document.getElementById('checkoutQuantity').textContent = '1';
+        document.getElementById('checkoutUnitPrice').textContent = formatPrice(button.dataset.productoPrecio);
+        document.getElementById('checkoutPrice').textContent = formatPrice(button.dataset.productoPrecio);
+        paymentMethod.value = 'tarjeta_prueba';
+        status.textContent = ''; status.className = 'checkout-status'; confirm.disabled = false; confirm.textContent = 'Simular pago';
+        purchaseCompleted = false; form.classList.remove('hidden'); receipt.classList.add('hidden');
         overlay.classList.remove('hidden');
     }));
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
-        if (!form.checkValidity()) { form.reportValidity(); return; }
-        confirm.disabled = true; confirm.textContent = 'Procesando…'; status.textContent = 'Validando tu pago simulado…';
-        await new Promise((resolve) => window.setTimeout(resolve, 1200));
+        confirm.disabled = true; confirm.textContent = 'Procesando…'; status.textContent = 'Procesando pago de prueba…';
         try {
-            const response = await fetch('/carrito/comprar/' + productId, {method: 'POST'});
+            const metodoPago = document.getElementById('paymentMethod').value;
+            const response = await fetch('/carrito/comprar/' + productId + '?metodo_pago=' + encodeURIComponent(metodoPago), {method: 'POST'});
             const data = await response.json();
             if (!response.ok) throw new Error(data.mensaje || data.detail || 'No fue posible completar la compra.');
-            status.className = 'checkout-status success'; status.textContent = '¡Compra simulada aprobada! El pedido fue registrado.'; confirm.textContent = 'Compra completada';
-            window.setTimeout(() => window.location.reload(), 1500);
-        } catch (error) { status.className = 'checkout-status error'; status.textContent = error.message; confirm.disabled = false; confirm.textContent = 'Intentar de nuevo'; }
+            const compra = data.compra;
+            document.getElementById('receiptProduct').textContent = compra.producto;
+            document.getElementById('receiptQuantity').textContent = compra.cantidad;
+            document.getElementById('receiptUnitPrice').textContent = formatPrice(compra.precio_unitario);
+            document.getElementById('receiptTotal').textContent = formatPrice(compra.total);
+            document.getElementById('receiptMethod').textContent = data.metodo_pago;
+            document.getElementById('receiptState').textContent = compra.estado.replaceAll('_', ' ');
+            document.getElementById('receiptReference').textContent = data.referencia_pago;
+            purchaseCompleted = true; form.classList.add('hidden'); receipt.classList.remove('hidden');
+        } catch (error) { status.className = 'checkout-status error'; status.textContent = error.message; confirm.disabled = false; confirm.textContent = 'Reintentar simulación'; }
     });
-    document.querySelectorAll('.remove-cart').forEach((button) => button.addEventListener('click', async () => { await fetch('/carrito/quitar/' + button.dataset.productoId, {method: 'POST'}); window.location.reload(); }));
+    document.querySelectorAll('.remove-cart').forEach((button) => button.addEventListener('click', async () => {
+        button.disabled = true;
+        try {
+            const response = await fetch('/carrito/quitar/' + button.dataset.productoId, {method: 'POST'});
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.mensaje || data.detail || 'No fue posible quitar el producto.');
+            window.location.reload();
+        } catch (error) {
+            button.disabled = false;
+            window.ecoToast(error.message, 'error');
+        }
+    }));
 })();
 </script>
 </body></html>

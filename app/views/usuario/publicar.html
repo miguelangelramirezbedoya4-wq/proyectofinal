@@ -15,7 +15,7 @@
 
     <link
         rel="stylesheet"
-        href="/static/css/general.css">
+        href="/static/css/general.css?v=ecoinsumos-design-2">
 
 </head>
 
@@ -148,7 +148,24 @@
                 <label for="precio">Precio</label>
                 <input type="number" id="precio" name="precio" min="0" placeholder="Ej: 15000" required>
             </div>
-            <p id="exchangeHint" class="exchange-hint hidden">Publicarás este objeto para intercambiarlo por otro, sin precio.</p>
+            <div id="exchangeFields" class="exchange-fields hidden">
+                <fieldset class="exchange-options">
+                    <legend>¿Qué te interesa recibir?</legend>
+                    <p class="exchange-help">Puedes elegir varias opciones y agregar una preferencia propia.</p>
+                    <div class="exchange-interest-grid">
+                        <label class="exchange-choice"><input type="checkbox" name="categorias_intercambio" value="Escolar"><span>Útiles escolares</span></label>
+                        <label class="exchange-choice"><input type="checkbox" name="categorias_intercambio" value="Oficina"><span>Artículos de oficina</span></label>
+                        <label class="exchange-choice"><input type="checkbox" name="categorias_intercambio" value="Libros"><span>Libros y cuadernos</span></label>
+                        <label class="exchange-choice"><input type="checkbox" name="categorias_intercambio" value="Tecnología"><span>Tecnología</span></label>
+                        <label class="exchange-choice"><input type="checkbox" name="categorias_intercambio" value="Arte y manualidades"><span>Arte y manualidades</span></label>
+                        <label class="exchange-choice"><input type="checkbox" name="categorias_intercambio" value="Hogar"><span>Objetos para el hogar</span></label>
+                        <label class="exchange-choice exchange-open"><input type="checkbox" name="categorias_intercambio" value="Acepto propuestas variadas"><span>Acepto propuestas variadas</span></label>
+                    </div>
+                    <label for="intercambio_por">Otra preferencia <small>(opcional)</small></label>
+                    <textarea id="intercambio_por" name="intercambio_por" rows="3" maxlength="500" placeholder="Describe qué objeto o característica buscas..."></textarea>
+                </fieldset>
+                <p id="exchangeHint" class="exchange-hint">Se publicará como intercambio; no necesitas agregar un precio.</p>
+            </div>
 
             <label for="categoria_id">Categoría</label>
             <select id="categoria_id" name="categoria_id" required>
@@ -172,12 +189,16 @@
 <script src="/static/js/theme.js"></script>
 <script src="/static/js/general.js"></script>
 <script>
-document.querySelectorAll('input[name="modalidad"]').forEach((option) => option.addEventListener('change', () => {
+const updatePublishMode = () => {
     const intercambio = document.querySelector('input[name="modalidad"]:checked').value === 'intercambio';
     document.getElementById('priceField').classList.toggle('hidden', intercambio);
-    document.getElementById('exchangeHint').classList.toggle('hidden', !intercambio);
+    document.getElementById('exchangeFields').classList.toggle('hidden', !intercambio);
     document.getElementById('precio').required = !intercambio;
-}));
+    document.getElementById('precio').disabled = intercambio;
+};
+
+document.querySelectorAll('input[name="modalidad"]').forEach((option) => option.addEventListener('change', updatePublishMode));
+updatePublishMode();
 </script>
 
 

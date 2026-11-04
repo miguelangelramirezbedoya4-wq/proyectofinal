@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Proponer intercambio - EcoInsumos</title>
-    <link rel="stylesheet" href="/static/css/general.css">
+    <link rel="stylesheet" href="/static/css/general.css?v=ecoinsumos-design-2">
 </head>
 <body>
 <header class="topbar"><div class="container nav-container"><a href="/usuario" class="brand"><div class="brand-mark">EI</div><span>Eco<span>Insumos</span></span></a><div class="auth-buttons">{% include "usuario/_tema.html" %}{% include "usuario/_menu_usuario.html" %}</div></div></header>
@@ -12,12 +12,19 @@
     <div class="catalog-head"><div><span class="section-kicker">INTERCAMBIO</span><h1>Propón un intercambio</h1><p>Ofrece uno de tus objetos por <strong>{{ objeto.nombre }}</strong>.</p></div></div>
     {% if objetos_propios %}
     <form action="/usuario/intercambio/{{ objeto.id }}" method="post" class="modal simple-publish-form exchange-form">
-        <div class="exchange-object"><span>Quieres recibir</span><strong>{{ objeto.nombre }}</strong><small>Publicado por {{ objeto.vendedor.nombre }}</small></div>
-        <label for="producto_ofrecido_id">Elige el objeto que vas a ofrecer</label>
-        <select id="producto_ofrecido_id" name="producto_ofrecido_id" required>
-            <option value="">Selecciona uno de tus objetos</option>
-            {% for propio in objetos_propios %}<option value="{{ propio.id }}">{{ propio.nombre }}{% if not propio.es_intercambio %} · $ {{ propio.precio }}{% endif %}</option>{% endfor %}
-        </select>
+        <div class="exchange-object"><span>Quieres recibir</span><strong>{{ objeto.nombre }}</strong><small>Publicado por {{ objeto.vendedor.nombre }}</small><span>Le interesa recibir: {{ objeto.intercambio_por or "Acepta propuestas variadas" }}</span></div>
+        <fieldset class="exchange-offer-picker">
+            <legend>Elige qué objeto ofrecer</legend>
+            <div class="exchange-product-grid">
+                {% for propio in objetos_propios %}
+                <label class="exchange-product-option">
+                    <input type="radio" name="producto_ofrecido_id" value="{{ propio.id }}" required>
+                    {% if propio.imagen %}<img src="/static/uploads/{{ propio.imagen }}" alt="">{% else %}<span class="exchange-product-placeholder"><svg class="ui-icon" aria-hidden="true"><use href="/static/icons.svg#box"></use></svg></span>{% endif %}
+                    <span class="exchange-product-info"><strong>{{ propio.nombre }}</strong><small>{{ "Intercambio" if propio.es_intercambio else "$ " ~ propio.precio }}</small></span>
+                </label>
+                {% endfor %}
+            </div>
+        </fieldset>
         <label for="mensaje">Mensaje para el publicador <small>(opcional)</small></label>
         <textarea id="mensaje" name="mensaje" rows="4" placeholder="Ej: Tengo este objeto en muy buen estado, ¿te interesa intercambiarlo?"></textarea>
         <p class="exchange-hint">Al aceptar, ambos objetos quedarán marcados como intercambiados.</p>

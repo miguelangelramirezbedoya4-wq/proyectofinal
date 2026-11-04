@@ -8,6 +8,7 @@ from app.models.carrito import Carrito
 from app.models.compra import Compra
 from app.models.productos import Producto
 from app.models.mensaje import Mensaje
+from app.security.passwords import hash_password, verify_password
 
 
 router = APIRouter(
@@ -44,6 +45,9 @@ def registrar_usuario(
     if not nombre or not email or not password or not whatsapp:
         return _error_response(400, "Todos los campos son obligatorios.")
 
+    if len(password) < 8:
+        return _error_response(400, "La contraseña debe tener al menos 8 caracteres.")
+
     if len(whatsapp.replace("+", "")) < 7 or len(whatsapp.replace("+", "")) > 15:
         return _error_response(400, "Ingresa un número de WhatsApp válido.")
 
@@ -64,6 +68,7 @@ def registrar_usuario(
         rol="usuario",
         activo=True,
     )
+    nuevo_usuario.password = hash_password(password)
 
     db.add(nuevo_usuario)
     db.commit()
@@ -95,11 +100,15 @@ def login(
         .first()
     )
 
-    if not usuario or usuario.password != password:
+    if not usuario or not verify_password(password, usuario.password):
         return _error_response(401, "Correo o contrasena incorrectos.")
 
     if not usuario.activo:
         return _error_response(403, "El usuario esta inactivo.")
+
+    if not usuario.password.startswith("scrypt$"):
+        usuario.password = hash_password(password)
+        db.commit()
 
     request.session.clear()
     request.session["usuario_id"] = usuario.id
@@ -134,11 +143,12 @@ def cambiar_password(
     usuario = db.get(Usuario, request.session.get("usuario_id"))
     if not usuario:
         return _error_response(401, "Tu sesión ha terminado.")
-    if usuario.password != password_actual:
+    if not verify_password(password_actual, usuario.password):
         return _error_response(400, "La contraseña actual no es correcta.")
-    if len(password_nueva.strip()) < 8:
+    password_nueva = password_nueva.strip()
+    if len(password_nueva) < 8:
         return _error_response(400, "La nueva contraseña debe tener al menos 8 caracteres.")
-    usuario.password = password_nueva.strip()
+    usuario.password = hash_password(password_nueva)
     db.commit()
     return JSONResponse(content={"ok": True, "mensaje": "Contraseña actualizada correctamente."})
 
@@ -153,7 +163,7 @@ def eliminar_cuenta(
     usuario = db.get(Usuario, usuario_id)
     if not usuario:
         return _error_response(401, "Tu sesión ha terminado.")
-    if usuario.password != password_actual:
+    if not verify_password(password_actual, usuario.password):
         return _error_response(400, "La contraseña no es correcta.")
 
     db.query(Carrito).filter(Carrito.usuario_id == usuario_id).delete()

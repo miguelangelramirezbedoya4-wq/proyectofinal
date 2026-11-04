@@ -10,6 +10,7 @@ class Producto(Base):
     descripcion = Column(Text, nullable=True)
     precio = Column(Integer, nullable=False)
     es_intercambio = Column(Boolean, nullable=False, default=False)
+    intercambio_por = Column(Text, nullable=True)
     categoria_id = Column(Integer, ForeignKey("categorias.id"), nullable=False)
     vendedor_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
     imagen = Column(String(255), nullable=True)

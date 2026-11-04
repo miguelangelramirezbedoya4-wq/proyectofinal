@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis intercambios - EcoInsumos</title>
-    <link rel="stylesheet" href="/static/css/general.css">
+    <link rel="stylesheet" href="/static/css/general.css?v=ecoinsumos-design-2">
 </head>
 <body>
 <header class="topbar"><div class="container nav-container"><a href="/usuario" class="brand"><div class="brand-mark">EI</div><span>Eco<span>Insumos</span></span></a><div class="auth-buttons">{% include "usuario/_tema.html" %}{% include "usuario/_menu_usuario.html" %}</div></div></header>
@@ -17,9 +17,22 @@
             <p class="exchange-direction">{{ "Propuesta recibida" if solicitud.producto_solicitado.vendedor_id == usuario_id else "Propuesta enviada" }}</p>
             <h3>{{ solicitud.producto_solicitado.nombre }}</h3>
             <p class="desc"><strong>{{ solicitud.solicitante.nombre }}</strong> ofrece <strong>{{ solicitud.producto_ofrecido.nombre }}</strong>.</p>
+            <div class="message-exchange-items">
+                <article>
+                    {% if solicitud.producto_ofrecido.imagen %}<img src="/static/uploads/{{ solicitud.producto_ofrecido.imagen }}" alt="{{ solicitud.producto_ofrecido.nombre }}">{% else %}<span class="exchange-product-placeholder"><svg class="ui-icon" aria-hidden="true"><use href="/static/icons.svg#box"></use></svg></span>{% endif %}
+                    <strong>{{ solicitud.producto_ofrecido.nombre }}</strong>
+                </article>
+                <span class="exchange-arrow" aria-hidden="true">↔</span>
+                <article>
+                    {% if solicitud.producto_solicitado.imagen %}<img src="/static/uploads/{{ solicitud.producto_solicitado.imagen }}" alt="{{ solicitud.producto_solicitado.nombre }}">{% else %}<span class="exchange-product-placeholder"><svg class="ui-icon" aria-hidden="true"><use href="/static/icons.svg#box"></use></svg></span>{% endif %}
+                    <strong>{{ solicitud.producto_solicitado.nombre }}</strong>
+                </article>
+            </div>
             {% if solicitud.mensaje %}<p class="exchange-message">“{{ solicitud.mensaje }}”</p>{% endif %}
             {% if solicitud.estado == "pendiente" and solicitud.producto_solicitado.vendedor_id == usuario_id %}
             <div class="row"><form action="/usuario/intercambios/{{ solicitud.id }}/aceptar" method="post"><button class="btn-solid" type="submit">Aceptar</button></form><form action="/usuario/intercambios/{{ solicitud.id }}/rechazar" method="post"><button class="btn-outline" type="submit">Rechazar</button></form></div>
+            {% elif solicitud.estado == "aceptada" %}
+            <div class="exchange-contact"><strong>Intercambio completado</strong><span>Coordinen el envío por WhatsApp:</span><a href="https://wa.me/{{ solicitud.solicitante.whatsapp|replace('+', '') }}">{{ solicitud.solicitante.nombre }} · {{ solicitud.solicitante.whatsapp }}</a><a href="https://wa.me/{{ solicitud.producto_solicitado.vendedor.whatsapp|replace('+', '') }}">{{ solicitud.producto_solicitado.vendedor.nombre }} · {{ solicitud.producto_solicitado.vendedor.whatsapp }}</a></div>
             {% endif %}
         </article>
         {% else %}

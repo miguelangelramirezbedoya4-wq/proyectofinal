@@ -15,7 +15,7 @@
 
     <link
         rel="stylesheet"
-        href="/static/css/general.css">
+        href="/static/css/general.css?v=ecoinsumos-design-2">
 
 </head>
 
@@ -93,6 +93,10 @@
             <p class="{{ 'exchange-price' if objeto.es_intercambio else '' }}">
                 {{ "Intercambio: propone un objeto" if objeto.es_intercambio else "Precio: $ " ~ objeto.precio }}
             </p>
+            {% if objeto.es_intercambio %}
+            <h3>Qué acepta</h3>
+            <p class="exchange-preferences">{{ objeto.intercambio_por or "Acepta propuestas variadas" }}</p>
+            {% endif %}
 
 
             <!-- PUBLICADOR -->

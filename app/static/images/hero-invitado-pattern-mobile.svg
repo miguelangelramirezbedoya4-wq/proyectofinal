@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 400" fill="none">
+  <defs>
+    <pattern id="guest-mobile-halftone" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.3" fill="#b9efff"/></pattern>
+  </defs>
+  <g fill="url(#guest-mobile-halftone)" opacity=".48">
+    <path d="M0 0h100v58H0zM320 0h100v58H320zM0 315h100v85H0zM320 315h100v85H320z"/>
+  </g>
+  <g opacity=".84" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5">
+    <g transform="translate(0 0) rotate(24 18 16)">
+      <path d="M3 43 20 5l8 4L11 47Z" fill="#d68b55" stroke="#f3d0a6"/><path d="m3 43-2 9 10-5" fill="#e6c6a1" stroke="#fff0d6"/>
+      <path d="M25 44 43 6l8 4-18 38Z" fill="#dd7584" stroke="#ffc4cd"/>
+    </g>
+    <g transform="translate(52 5) rotate(-8 20 17)">
+      <rect x="2" y="2" width="41" height="33" rx="4" fill="#49a983" stroke="#a9dfc5"/><path d="M9 2v33M14 11h23M14 18h23M14 25h20" stroke="#fff"/>
+      <path d="M5 6v25M3 10h4M3 17h4M3 24h4" stroke="#c9d4db" stroke-width="1.5"/>
+    </g>
+    <g transform="translate(365 4) rotate(7 25 20)">
+      <path d="M2 5 26 2v37L2 42Z" fill="#ffdf62"/><path d="m26 2 28 3v37l-28-3Z" fill="#fff7d5"/>
+      <path d="M26 2v37M6 13l16-2M6 20l16-2M6 27l16-2M31 12l18 2M31 21l18 2M31 30l18 2" stroke="#37748a" stroke-width="2"/>
+      <path d="M26 4v33" stroke="#17324d" stroke-width="4"/>
+    </g>
+    <g transform="translate(2 330) rotate(-10 28 24)">
+      <rect x="2" y="2" width="33" height="11" rx="4" fill="#ede2c5" stroke="#fff7e6"/><circle cx="11" cy="7" r="1.3" fill="#fff7e6" stroke="#fff7e6"/><circle cx="19" cy="7" r="1.3" fill="#fff7e6" stroke="#fff7e6"/><circle cx="27" cy="7" r="1.3" fill="#fff7e6" stroke="#fff7e6"/>
+      <circle cx="16" cy="49" r="14" stroke="#56c9b5" stroke-width="4"/><circle cx="52" cy="49" r="14" stroke="#56c9b5" stroke-width="4"/><path d="M30 49h8M3 39l-2-8M66 39l16-15" stroke="#56c9b5" stroke-width="3"/>
+    </g>
+    <g transform="translate(71 343) rotate(10 18 18)">
+      <circle cx="8" cy="7" r="6" fill="#65c6e8" stroke="#d8f6ff"/><circle cx="28" cy="7" r="6" fill="#65c6e8" stroke="#d8f6ff"/><path d="m12 12 22 24M24 12 3 36" stroke="#bcecff" stroke-width="3.5"/>
+    </g>
+    <g transform="translate(278 345) rotate(8 29 20)">
+      <rect x="2" y="2" width="61" height="41" rx="6" fill="#ff6575"/><rect x="8" y="8" width="49" height="13" rx="3" fill="#174453"/>
+      <text x="32.5" y="18" fill="#b7ff51" stroke="none" font-family="monospace" font-size="8" font-weight="800" text-anchor="middle">94.82</text>
+      <g fill="#ffd34f" stroke-width="1.5"><rect x="8" y="26" width="8" height="5" rx="1"/><rect x="19" y="26" width="8" height="5" rx="1"/><rect x="30" y="26" width="8" height="5" rx="1"/><rect x="41" y="26" width="8" height="5" rx="1"/><rect x="8" y="34" width="8" height="5" rx="1"/><rect x="19" y="34" width="8" height="5" rx="1"/><rect x="30" y="34" width="8" height="5" rx="1"/><rect x="41" y="34" width="8" height="5" rx="1"/></g>
+    </g>
+    <g transform="translate(350 340) rotate(-8 30 20)">
+      <rect x="2" y="2" width="61" height="39" rx="7" fill="#132f3d" stroke="#74c8d1"/><rect x="6" y="7" width="53" height="29" rx="4" fill="#102a37" stroke="#74c8d1"/>
+      <text x="32.5" y="25" fill="#f5fff0" stroke="none" font-family="monospace" font-size="12" font-weight="700" text-anchor="middle">15:00</text>
+    </g>
+    <g transform="translate(364 284) rotate(9 22 15)">
+      <rect x="1" y="1" width="42" height="29" rx="5" fill="#d7e8d0" stroke="#f1fff0"/><rect x="7" y="7" width="42" height="29" rx="5" fill="#f0d26c" stroke="#fff0b0"/><path d="M13 16h29M13 23h23" stroke="#fff9df" stroke-width="1.5"/>
+    </g>
+    <g transform="translate(0 133) rotate(-9 15 20)">
+      <path d="M4 35V14a11 11 0 0 1 22 0v21" stroke="#d8edf0" stroke-width="4"/><rect x="1" y="28" width="28" height="12" rx="4" fill="#d9e5e8" stroke="#fff"/>
+    </g>
+    <g transform="translate(389 143) rotate(12 12 22)">
+      <rect x="1" y="2" width="25" height="42" rx="4" fill="#f0b857" stroke="#ffe3a1"/><path d="M8 2v42M5 12h5M5 22h5M5 32h5" stroke="#fff5d8" stroke-width="1.5"/>
+    </g>
+  </g>
+</svg>

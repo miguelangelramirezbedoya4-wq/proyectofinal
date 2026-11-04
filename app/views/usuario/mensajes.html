@@ -15,7 +15,7 @@
 
     <link
         rel="stylesheet"
-        href="/static/css/general.css">
+        href="/static/css/general.css?v=ecoinsumos-design-2">
 
 </head>
 
@@ -115,28 +115,38 @@
 
                 <article class="card">
 
-                    <span class="tag">
-                        Mensaje
-                    </span>
-
-
-                    <h3>
-                        {{ mensaje.producto.nombre }}
-                    </h3>
-
-
-                    <p class="desc">
-                        {{ mensaje.contenido }}
-                    </p>
-
-
-                    <p>
-                        <strong>
-                            De:
-                        </strong>
-
-                        {{ mensaje.remitente.nombre }}
-                    </p>
+                    {% if mensaje.solicitud_intercambio %}
+                    {% set solicitud = mensaje.solicitud_intercambio %}
+                    {% set oferta = solicitud.producto_ofrecido %}
+                    <span class="tag exchange-state {{ solicitud.estado }}">Propuesta de intercambio · {{ solicitud.estado|capitalize }}</span>
+                    <h3>{{ solicitud.producto_solicitado.nombre }}</h3>
+                    <p class="desc"><strong>{{ solicitud.solicitante.nombre }}</strong> ofrece este objeto:</p>
+                    <div class="message-exchange-items">
+                        <article>
+                            {% if oferta.imagen %}<img src="/static/uploads/{{ oferta.imagen }}" alt="{{ oferta.nombre }}">{% else %}<span class="exchange-product-placeholder"><svg class="ui-icon" aria-hidden="true"><use href="/static/icons.svg#box"></use></svg></span>{% endif %}
+                            <strong>{{ oferta.nombre }}</strong>
+                            <small>{{ oferta.descripcion }}</small>
+                        </article>
+                        <span class="exchange-arrow" aria-hidden="true">↔</span>
+                        <article>
+                            {% if solicitud.producto_solicitado.imagen %}<img src="/static/uploads/{{ solicitud.producto_solicitado.imagen }}" alt="{{ solicitud.producto_solicitado.nombre }}">{% else %}<span class="exchange-product-placeholder"><svg class="ui-icon" aria-hidden="true"><use href="/static/icons.svg#box"></use></svg></span>{% endif %}
+                            <strong>{{ solicitud.producto_solicitado.nombre }}</strong>
+                            <small>Tu publicación</small>
+                        </article>
+                    </div>
+                    {% if solicitud.mensaje %}<p class="exchange-message">{{ solicitud.mensaje }}</p>{% endif %}
+                    <p class="message-meta"><strong>De:</strong> {{ mensaje.remitente.nombre }} · {{ mensaje.creado_en.strftime('%d/%m/%Y %H:%M') }}</p>
+                    {% if solicitud.estado == "pendiente" and mensaje.destinatario_id == usuario_id %}
+                    <div class="row exchange-actions"><form action="/usuario/intercambios/{{ solicitud.id }}/aceptar" method="post"><button class="btn-solid" type="submit">Aceptar intercambio</button></form><form action="/usuario/intercambios/{{ solicitud.id }}/rechazar" method="post"><button class="btn-outline" type="submit">Rechazar</button></form></div>
+                    {% elif solicitud.estado == "aceptada" %}
+                    <div class="exchange-contact"><strong>Intercambio completado</strong><span>Coordinen el envío por WhatsApp:</span><a href="https://wa.me/{{ solicitud.solicitante.whatsapp|replace('+', '') }}">{{ solicitud.solicitante.nombre }} · {{ solicitud.solicitante.whatsapp }}</a><a href="https://wa.me/{{ solicitud.producto_solicitado.vendedor.whatsapp|replace('+', '') }}">{{ solicitud.producto_solicitado.vendedor.nombre }} · {{ solicitud.producto_solicitado.vendedor.whatsapp }}</a></div>
+                    {% endif %}
+                    {% else %}
+                    <span class="tag">Mensaje</span>
+                    <h3>{{ mensaje.producto.nombre }}</h3>
+                    <p class="desc">{{ mensaje.contenido }}</p>
+                    <p><strong>De:</strong> {{ mensaje.remitente.nombre }}</p>
+                    {% endif %}
 
                 </article>
 

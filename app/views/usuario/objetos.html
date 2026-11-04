@@ -15,7 +15,7 @@
 
     <link
         rel="stylesheet"
-        href="/static/css/general.css">
+        href="/static/css/general.css?v=ecoinsumos-design-2">
 
 </head>
 
@@ -96,15 +96,28 @@
 
         <div>
 
-            <h1>{{ categoria_actual.nombre if categoria_actual else "Objetos disponibles" }}</h1>
+            <h1>{{ categoria_actual.nombre if categoria_actual else ("Objetos publicados por ti" if vista_propia else "Objetos disponibles") }}</h1>
 
             <p>
-                Explora los objetos publicados por otros usuarios.
+                {{ "Aquí puedes consultar los objetos que has publicado." if vista_propia else "Explora los objetos publicados por otros usuarios." }}
             </p>
 
         </div>
 
     </div>
+
+    <nav class="categories" aria-label="Tipo de objetos">
+        <a class="tab {{ '' if vista_propia else 'active' }}" href="/usuario/objetos" {% if not vista_propia %}aria-current="page"{% endif %}>Objetos disponibles</a>
+        <a class="tab {{ 'active' if vista_propia else '' }}" href="/usuario/objetos?mis_publicaciones=true" {% if vista_propia %}aria-current="page"{% endif %}>Objetos publicados por ti</a>
+    </nav>
+
+    {% if vista_propia and resultado == "eliminado" %}
+    <p class="notice notice-success" role="status">El objeto se eliminó correctamente.</p>
+    {% elif vista_propia and resultado == "vendido" %}
+    <p class="notice notice-error" role="alert">No se puede eliminar este objeto porque ya tiene una venta registrada. Así se conserva el historial de compras.</p>
+    {% elif vista_propia and resultado == "historial" %}
+    <p class="notice notice-error" role="alert">No se puede eliminar este objeto porque tiene mensajes o propuestas de intercambio asociados.</p>
+    {% endif %}
 
 
     <div class="grid">
@@ -131,22 +144,41 @@
                     {{ objeto.descripcion }}
                 </p>
 
+                {% if objeto.es_intercambio %}
+                <p class="exchange-preferences"><strong>Busca:</strong> {{ objeto.intercambio_por or "Acepta propuestas variadas" }}</p>
+                {% endif %}
+
                 <div class="row">
                     <span class="price {{ 'exchange-price' if objeto.es_intercambio else '' }}">
                         {{ "Intercambio" if objeto.es_intercambio else "$ " ~ objeto.precio }}
                     </span>
 
+                    {% if request.session.get("usuario_id") %}
                     <a href="/usuario/objetos/{{ objeto.id }}" class="btn-outline">Ver</a>
-                    {% if objeto.es_intercambio %}
+                    {% if objeto.vendedor_id == request.session.get("usuario_id") %}
+                    <span class="tag">Publicado por ti</span>
+                    {% if vista_propia %}
+                    <form action="/usuario/objetos/{{ objeto.id }}/eliminar" method="post" onsubmit="return confirm('¿Seguro que deseas eliminar este objeto?');">
+                        <button type="submit" class="btn-outline delete-product-button">Eliminar</button>
+                    </form>
+                    {% endif %}
+                    {% elif objeto.es_intercambio %}
                     <a href="/usuario/intercambio/{{ objeto.id }}" class="btn-solid">Proponer intercambio</a>
                     {% else %}
                     <button type="button" class="btn-solid add-cart" data-producto-id="{{ objeto.id }}">Agregar</button>
+                    {% endif %}
+                    {% else %}
+                    <a href="/" class="btn-outline">Inicia sesión para continuar</a>
                     {% endif %}
                 </div>
 
             </article>
 
         {% endfor %}
+
+        {% if not objetos %}
+            <p>{{ "Todavía no has publicado objetos." if vista_propia else "No hay objetos disponibles por el momento." }}</p>
+        {% endif %}
 
     </div>
 
@@ -158,9 +190,30 @@
 <script src="/static/js/general.js"></script>
 <script>
 document.querySelectorAll('.add-cart').forEach((button) => button.addEventListener('click', async () => {
-    const response = await fetch('/carrito/agregar/' + button.dataset.productoId, {method: 'POST'});
-    const data = await response.json();
-    window.alert(data.mensaje || data.detail);
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Agregando…';
+    try {
+        const response = await fetch('/carrito/agregar/' + button.dataset.productoId, {method: 'POST'});
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.mensaje || data.detail || 'No fue posible agregar el producto.');
+        document.querySelectorAll('.nav-links a[href="/carrito/"]').forEach((link) => {
+            let count = link.querySelector('.cart-count');
+            if (!count) {
+                count = document.createElement('span');
+                count.className = 'cart-count';
+                link.appendChild(count);
+            }
+            count.textContent = data.cantidad;
+            count.setAttribute('aria-label', data.cantidad + ' artículos en el carrito');
+        });
+        window.ecoToast(data.mensaje, 'success');
+    } catch (error) {
+        window.ecoToast(error.message, 'error');
+    } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+    }
 }));
 </script>
 

@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.database.database import SessionLocal
+from app.models.compra import Compra
+from app.models.productos import Producto
 from app.models.usuario import Usuario
 
 
@@ -32,6 +34,21 @@ def panel_admin(request: Request):
 
     try:
         usuarios = db.query(Usuario).order_by(Usuario.id.desc()).all()
+        productos = (
+            db.query(Producto)
+            .options(joinedload(Producto.vendedor), joinedload(Producto.categoria))
+            .order_by(Producto.id.desc())
+            .all()
+        )
+        compras = (
+            db.query(Compra)
+            .options(
+                joinedload(Compra.comprador),
+                joinedload(Compra.producto).joinedload(Producto.vendedor),
+            )
+            .order_by(Compra.creada_en.desc())
+            .all()
+        )
     finally:
         db.close()
 
@@ -41,6 +58,8 @@ def panel_admin(request: Request):
         context={
             "request": request,
             "usuarios": usuarios,
+            "productos": productos,
+            "compras": compras,
             "nombre": request.session.get("nombre", "Administrador"),
         },
     )
