@@ -1296,7 +1296,22 @@ footer {
 
 .app-footer .footer-content {
     display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
     justify-content: center;
+}
+
+.footer-copy {
+    display: grid;
+    gap: 0.25rem;
+    color: #E1E9DD;
+    font-size: 0.86rem;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.footer-copy p {
+    margin: 0;
 }
 
 .app-footer .brand {
